@@ -336,30 +336,29 @@ public class Trees {
 	// DJIKSTRA
 	// For weighted graph
 	// If graph is not weighted assume weights to be 1
-	// p.s. Use self defined minHeap coded below
 	long[] dijkstra(int[][][] g, int from) {
 		int n = g.length;
+		
 		long[] dist = new long[n]; // Contains the distance
 		int[] par = new int[n]; // Contains the tree formed (not necessary MST). It contains parent of node I
 
 		Arrays.fill(dist, Long.MAX_VALUE / 10);
 		Arrays.fill(par, -1);
-
-		MinHeapL q = new MinHeapL(n);
-		q.add(from, 0);
 		dist[from] = 0;
-
-		while (q.size() > 0) {
-			int cur = q.argmin();
-			q.remove(cur);
-
+		
+		PriorityQueue<long[]> pq = new PriorityQueue<>((o1, o2) -> Long.compare(o1[1], o2[1]));
+		pq.add(new long[] {from, 0});
+		
+		while(!pq.isEmpty()) {
+			int cur = (int)pq.poll()[0];
+			
 			for (int[] e : g[cur]) {
 				int next = e[0];
 				long newDist = dist[cur] + e[1];
 				if (newDist < dist[next]) {
 					dist[next] = newDist;
 					par[next] = cur;
-					q.update(next, newDist);
+					pq.add(new long[] {next, newDist});
 				} else if (newDist == dist[next]) {
 					if (dist[cur] > dist[par[next]]) {
 						par[next] = cur;
@@ -367,121 +366,9 @@ public class Trees {
 				}
 			}
 		}
-
+		
 		return dist;
 	}
-
-	// MinHeap of Long with updates
-	class MinHeapL {
-		long[] a;
-		int[] map, imap;
-		int n, pos;
-		long INF = Long.MAX_VALUE;
-
-		MinHeapL(int size) {
-			n = Integer.highestOneBit((size + 1) << 1);
-			a = new long[n];
-			map = new int[n];
-			imap = new int[n];
-			Arrays.fill(a, INF);
-			Arrays.fill(map, -1);
-			Arrays.fill(imap, -1);
-			pos = 1;
-		}
-
-		long add(int ind, long val) {
-			int ret = imap[ind];
-			if (imap[ind] < 0) {
-				a[pos] = val;
-				map[pos] = ind;
-				imap[ind] = pos;
-				pos++;
-				up(pos - 1);
-			}
-			return ret != -1 ? a[ret] : val;
-		}
-
-		long update(int ind, long val) {
-			int ret = imap[ind];
-			if (imap[ind] < 0) {
-				add(ind, val);
-			} else {
-				a[ret] = val;
-				up(ret);
-				down(ret);
-			}
-			return val;
-		}
-
-		long remove(int ind) {
-			if (pos == 1)
-				return INF;
-			if (imap[ind] == -1)
-				return INF;
-
-			pos--;
-			int rem = imap[ind];
-			long ret = a[rem];
-			map[rem] = map[pos];
-			imap[map[pos]] = rem;
-			imap[ind] = -1;
-			a[rem] = a[pos];
-			a[pos] = INF;
-			map[pos] = -1;
-
-			up(rem);
-			down(rem);
-			return ret;
-		}
-
-		long minVal() {
-			return a[1];
-		}
-
-		// gives index of minmum value
-		int argmin() {
-			return map[1];
-		}
-
-		int size() {
-			return pos - 1;
-		}
-
-		private void up(int cur) {
-			for (int c = cur, p = c >>> 1; p >= 1 && a[p] > a[c]; c >>>= 1, p >>>= 1) {
-				long d = a[p];
-				a[p] = a[c];
-				a[c] = d;
-				int e = imap[map[p]];
-				imap[map[p]] = imap[map[c]];
-				imap[map[c]] = e;
-				e = map[p];
-				map[p] = map[c];
-				map[c] = e;
-			}
-		}
-
-		private void down(int cur) {
-			for (int c = cur; 2 * c < pos;) {
-				int b = a[2 * c] < a[2 * c + 1] ? 2 * c : 2 * c + 1;
-				if (a[b] < a[c]) {
-					long d = a[c];
-					a[c] = a[b];
-					a[b] = d;
-					int e = imap[map[c]];
-					imap[map[c]] = imap[map[b]];
-					imap[map[b]] = e;
-					e = map[c];
-					map[c] = map[b];
-					map[b] = e;
-					c = b;
-				} else {
-					break;
-				}
-			}
-		}
-	}
-	// MinHeap of Long
 
 	// Heavy Light Decomposition : HLD
 
