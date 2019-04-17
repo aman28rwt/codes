@@ -3,153 +3,116 @@ import java.util.*;
 
 public class Main implements Runnable {
 	FastReader scn;
-	StringBuilder out;
-	String INPUT = "";
+	PrintWriter out;
+	String INPUT = "5\n" + 
+			"2 4 8 3 6\n" + 
+			"";
 
 	void solve() {
-		int n = scn.nextInt(), m = scn.nextInt();
-		int[] from = new int[m], to = new int[m], w = new int[m];
-		for (int i = 0; i < m; i++) {
-			from[i] = scn.nextInt() - 1;
-			to[i] = scn.nextInt() - 1;
-			w[i] = scn.nextInt();
-		}
-		int[][][] g = packWU(n, from, to, w);
-		if (!dfs(g, 0, n - 1, new boolean[n])) {
-			out.append(-1 + "\n");
-			return;
-		}
-		
-		int[] par = dijkstra(g, 0);
-		int[][] gg = parentToG(par);
-		dfs(gg, 0, -1, n - 1);
-		for (int i = ans.size() - 1; i >= 0; i--) {
-			out.append(ans.get(i) + 1 + " ");
-		}
-		out.append("\n");
-	}
-	
-	int[] dijkstra(int[][][] g, int from) {
-		int n = g.length;
-		
-		long[] dist = new long[n]; // Contains the distance
-		int[] par = new int[n]; // Contains the tree formed (not necessary MST). It contains parent of node I
+		int n = scn.nextInt(), max = (int) 1e7 + 1;
+		int[] arr = scn.nextIntArray(n);
 
-		Arrays.fill(dist, Long.MAX_VALUE / 10);
-		Arrays.fill(par, -1);
-		dist[from] = 0;
-		
-		PriorityQueue<long[]> pq = new PriorityQueue<>((o1, o2) -> Long.compare(o1[1], o2[1]));
-		pq.add(new long[] {from, 0});
-		
-		while(!pq.isEmpty()) {
-			int cur = (int)pq.poll()[0];
-			
-			for (int[] e : g[cur]) {
-				int next = e[0];
-				long newDist = dist[cur] + e[1];
-				if (newDist < dist[next]) {
-					dist[next] = newDist;
-					par[next] = cur;
-					pq.add(new long[] {next, newDist});
-				} else if (newDist == dist[next]) {
-					if (dist[cur] > dist[par[next]]) {
-						par[next] = cur;
+		int[] lol = new int[max];
+		for (int a : arr) {
+			lol[a]++;
+		}
+
+		long lcm = Long.MAX_VALUE;
+		int a = -1, b = -1;
+
+		for (int i = 1; i < max; i++) {
+			long z = Long.MAX_VALUE;
+			int p = -1, q = -1;
+			if (lol[i] == 1) {
+				p = i;
+			} else if (lol[i] > 1) {
+				q = i;
+				z = i;
+				if (q != -1 && z < lcm) {
+					lcm = z;
+					a = p;
+					b = q;
+				}
+				continue;
+			}
+
+			if (lol[i] != 0) {
+				for (int j = 2 * i; j < max; j += i) {
+					if (lol[j] > 0) {
+						if (j < z) {
+							z = j;
+							q = j;
+						}
+						break;
+					}
+				}
+			} else {
+				p = i;
+				while(p < max && lol[p] == 0) {
+					p += i;
+				}
+				if(p > max) {
+					continue;
+				}
+				for (int j = p + i; j < max; j += i) {
+					if (lol[j] > 0) {
+						long lc = (p * 1L * j) / gcd(p, j);
+						if (lc < z) {
+							z = lc;
+							q = j;
+						}
 					}
 				}
 			}
-		}
-		
-		return par;
-	}
-	
-	ArrayList<Integer> ans = new ArrayList<>();
-
-	boolean dfs(int[][] g, int u, int p, int des) {
-		if (u == des) {
-			ans.add(des);
-			return true;
+			
+			if (q != -1 && z < lcm) {
+				lcm = z;
+				a = p;
+				b = q;
+			}
 		}
 
-		for (int v : g[u]) {
-			if (v != p) {
-				if (dfs(g, v, u, des)) {
-					ans.add(u);
-					return true;
+		if (a == -1) {
+			int p = 1;
+			while (lol[p] == 0) {
+				p++;
+			}
+			for (int q = p + 1; q < max; q++) {
+				if (lol[q] > 0) {
+					long lc = (p * 1L * q) / gcd(p, q);
+					if (lc < lcm) {
+						lcm = lc;
+						a = p;
+						b = q;
+					}
+					p = q;
 				}
 			}
 		}
 
-		return false;
-	}
-	
-	int[][] parentToG(int[] par) {
-		int n = par.length;
-		int[] ct = new int[n];
+		int i1 = -1, i2 = -1;
 		for (int i = 0; i < n; i++) {
-			if (par[i] >= 0) {
-				ct[i]++;
-				ct[par[i]]++;
-			}
-		}
-		int[][] g = new int[n][];
-		for (int i = 0; i < n; i++) {
-			g[i] = new int[ct[i]];
-		}
-		for (int i = 0; i < n; i++) {
-			if (par[i] >= 0) {
-				g[par[i]][--ct[par[i]]] = i;
-				g[i][--ct[i]] = par[i];
-			}
-		}
-		return g;
-	}
-	
-	boolean dfs(int[][][] g, int u, int des, boolean[] vis) {
-		if (vis[u]) {
-			return false;
-		}
-		vis[u] = true;
-		if (u == des) {
-			return true;
-		}
-
-		for (int[] v : g[u]) {
-			if (dfs(g, v[0], des, vis)) {
-				return true;
+			if (arr[i] == a) {
+				i1 = i + 1;
+			} else if (arr[i] == b) {
+				i2 = i + 1;
 			}
 		}
 
-		return false;
+		out.println(i1 + " " + i2);
 	}
-	
-	int[][][] packWU(int n, int[] from, int[] to, int[] w) {
-		int[][][] g = new int[n][][];
-		int[] p = new int[n];
-		for (int f : from)
-			p[f]++;
-		for (int t : to)
-			p[t]++;
-		for (int i = 0; i < n; i++)
-			g[i] = new int[p[i]][2];
-		for (int i = 0; i < from.length; i++) {
-			--p[from[i]];
-			g[from[i]][p[from[i]]][0] = to[i];
-			g[from[i]][p[from[i]]][1] = w[i];
-			--p[to[i]];
-			g[to[i]][p[to[i]]][0] = from[i];
-			g[to[i]][p[to[i]]][1] = w[i];
-		}
-		return g;
+
+	long gcd(long a, long b) {
+		return b == 0 ? a : gcd(b, a % b);
 	}
 
 	public void run() {
 		long time = System.currentTimeMillis();
 		boolean oj = System.getProperty("ONLINE_JUDGE") != null;
-		out = new StringBuilder();
+		out = new PrintWriter(System.out);
 		scn = new FastReader(oj);
 		solve();
-		System.out.print(out);
+		out.flush();
 		if (!oj) {
 			System.out.println(Arrays.deepToString(new Object[] { System.currentTimeMillis() - time + " ms" }));
 		}

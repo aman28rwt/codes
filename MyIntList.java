@@ -3,10 +3,10 @@ import java.util.Random;
 
 public class MyIntList {
 	private int[] arr;
-	private int capacity = 1 << 4;
-	private int initialCapacity = 1 << 4;
-	public int length = 0;
+	private int capacity = 1 << 2;
+	private int initialCapacity = 1 << 2;
 	private int lambda = 2;
+	public int length = 0;
 
 	public MyIntList() {
 		arr = new int[capacity];
@@ -38,6 +38,10 @@ public class MyIntList {
 	
 	public int capacity() {
 		return this.capacity;
+	}
+	
+	public int[] toArray() {
+		return Arrays.copyOf(arr, length);
 	}
 	
 	public void add(int val) {
